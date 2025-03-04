@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Medicamentos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .dashboard-header {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+        }
+        .dashboard-title {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+        .dashboard-tabs {
+            display: flex;
+            gap: 10px;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .main-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: none;
+        }
+        .main-card.active {
+            display: block;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-title {
+            margin: 0;
+            font-size: 18px;
+            color: #495057;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #0069d9;
+        }
+        .btn.btn-success {
+            background-color: #28a745;
+        }
+        .btn.btn-success:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        .patient-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .medication-list {
+            margin-top: 20px;
+        }
+        .medication-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+        .med-info-section {
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .med-name {
+            font-size: 20px;
+            color: #333;
+            font-weight: 700;
+            text-decoration: underline;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .med-group {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .group-inmunosupresor {
+            background-color: #ffeeba;
+            color: #856404;
+        }
+        .group-antiinfeccioso {
+            background-color: #c3e6cb;
+            color: #155724;
+        }
+        .group-otro {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .med-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .med-detail-item {
+            margin-bottom: 15px;
+        }
+        .med-detail-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .med-detail-content {
+            line-height: 1.5;
+        }
+        .med-important-info {
+            background-color: #fef5f5;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        .patient-info-container {
+            padding: 0;
+            background-color: transparent;
+        }
+        .no-meds-selected {
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .alert-info {
+            padding: 15px;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .advice-card {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .advice-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .advice-content {
+            line-height: 1.6;
+            color: #444;
+        }
+        .report-container {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 25px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .report-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .report-date {
+            font-size: 14px;
+            color: #666;
+        }
+        .report-section {
+            margin-bottom: 25px;
+        }
+        .report-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .report-med-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .report-med-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .report-med-group {
+            font-weight: 500;
+            color: #0056b3;
+            margin-bottom: 5px;
+        }
+        .report-med-detail {
+            margin-bottom: 8px;
+        }
+        .report-med-label {
+            font-weight: 600;
+            display: inline-block;
+            min-width: 180px;
+        }
+        .report-important-info {
+            background-color: #fff4f4;
+            border-left: 3px solid #dc3545;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .report-advice-list {
+            list-style-type: disc;
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        .report-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+        .export-container {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+        .badge-hospitalaria {
+            background-color: #e6f2ff;
+            color: #0056b3;
+        }
+        .badge-comunitaria {
+            background-color: #e6fff2;
+            color: #00b356;
+        }
+.report-med-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">Información de medicamentos para pacientes</h1>
+            <h4>Programa de Atencion Farmaceutica a pacientes trasplantados. Servicio de Farmacia, Hospital U.P. La Fe</h4>
+        </header>
+        
+        <div class="dashboard-tabs">
+            <div class="tab" data-tab="listado">Repositorio de medicamentos</div>
+            <div class="tab" data-tab="informacion">Información para pacientes</div>
+            <div class="tab" data-tab="consejos">Consejos generales</div>
+            <div class="tab" data-tab="informe">Generar informe</div>
+        </div>
+        
+        <!-- LISTADO DE MEDICAMENTOS -->
+        <div id="listado" class="main-card">
+            <div class="card-header">
+                <h2 class="card-title">Listado de Medicamentos</h2>
+            </div>
+            <div class="card-body">
+                <div class="patient-selector">
+                    <h3>Medicamentos del Paciente</h3>
+                    <p>Seleccione los medicamentos que está tomando el paciente:</p>
+                    
+                    <div style="margin-top: 15px;">
+                        <button id="btnExportar" class="btn btn-success" onclick="exportarMedicamentos()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Exportar a Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabla de medicamentos -->
+                <div class="medication-list">
+                    <table id="tablaMedicamentos">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Seleccionar</th>
+                                <th>Nombre</th>
+                                <th>Principio activo</th>
+                                <th>Actividad Farmacológica</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los medicamentos se cargarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INFORMACIÓN PARA PACIENTES -->
+        <div id="informacion" class="main-card">
+            <div class="card-header">
+                <h2 class="card-title">Información para Pacientes</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert-info">
+                    <p>Esta sección muestra información detallada sobre los medicamentos seleccionados por el paciente en el "Listado de medicamentos".</p>
+                </div>
+                
+                <div id="informacionPaciente" class="patient-info-container">
+                    <!-- La información de los medicamentos seleccionados se cargará dinámicamente aquí -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- CONSEJOS GENERALES -->
+        <div id="consejos" class="main-card">
+            <div class="card-header">
+                <h2 class="card-title">Consejos Generales</h2>
+            </div>
+            <div class="card-body">
+                <div class="advice-card">
+                    <div class="advice-title">Almacenamiento de medicamentos</div>
+                    <div class="advice-content">
+                        <p>Es importante conservar los medicamentos en un lugar adecuado para mantener su efectividad:</p>
+                        <ul>
+                            <li>Guarde los medicamentos en un lugar fresco, seco y alejado de la luz directa del sol.</li>
+                            <li>Evite almacenarlos en el baño o la cocina, donde la humedad y los cambios de temperatura pueden afectar su estabilidad.</li>
+                            <li>Mantenga siempre los medicamentos en su envase original con el prospecto incluido.</li>
+                            <li>Verifique regularmente la fecha de caducidad y deseche adecuadamente los medicamentos caducados.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="advice-card">
+                    <div class="advice-title">Seguridad</div>
+                    <div class="advice-content">
+                        <p>Para evitar accidentes y mal uso de medicamentos:</p>
+                        <ul>
+                            <li>Mantenga todos los medicamentos fuera del alcance y de la vista de los niños.</li>
+                            <li>No comparta sus medicamentos con otras personas, incluso si presentan síntomas similares.</li>
+                            <li>Informe siempre a su médico sobre todos los medicamentos que está tomando, incluidos los de venta libre y suplementos.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="advice-card">
+                    <div class="advice-title">Adherencia al tratamiento</div>
+                    <div class="advice-content">
+                        <p>Seguir correctamente el tratamiento prescrito es fundamental para su efectividad:</p>
+                        <ul>
+                            <li>Tome los medicamentos exactamente como han sido prescritos, respetando dosis y horarios.</li>
+                            <li>No interrumpa el tratamiento sin consultar antes con su médico o farmacéutico, incluso si se siente mejor.</li>
+                            <li>Utilice recordatorios (alarmas, pastilleros, aplicaciones móviles) si tiene dificultad para recordar tomar sus medicamentos.</li>
+                            <li>Lleve un registro de cuándo toma sus medicamentos y de cualquier efecto secundario que experimente.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="advice-card">
+                    <div class="advice-title">Consultas a profesionales</div>
+                    <div class="advice-content">
+                        <p>La comunicación con los profesionales sanitarios es esencial:</p>
+                        <ul>
+                            <li>Consulte con su médico o farmacéutico cualquier duda sobre sus medicamentos.</li>
+                            <li>Informe sobre cualquier efecto secundario o reacción que experimente.</li>
+                            <li>Cuando acuda a una consulta, lleve una lista actualizada de todos los medicamentos que está tomando.</li>
+                            <li>Solicite información sobre posibles interacciones con alimentos u otros medicamentos.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INFORME -->
+        <div id="informe" class="main-card">
+            <div class="card-header">
+                <h2 class="card-title">Informe</h2>
+            </div>
+            <div class="card-body">
+                <div class="export-container">
+                    <button class="btn btn-success" onclick="exportarPDF()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        Exportar a PDF
+                    </button>
+                </div>
+                
+                <div id="reportePDF" class="report-container">
+                    <div class="report-header">
+                        <div class="report-title">Informe de Medicamentos</div>
+                        <h4>Programa de Atención Farmacéutica a pacientes trasplantados</h4>
+                        <h4>Servicio de Farmacia Hospital UP La Fe</h4>
+                        <div class="report-date">Fecha: <span id="fechaInforme"></span></div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="report-section-title">Medicamentos</div>
+                        <div id="reporteMedicamentos">
+                            <!-- Los medicamentos seleccionados se cargarán dinámicamente aquí -->
+                        </div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="report-section-title">Consejos generales</div>
+                        <ul class="report-advice-list">
+                            <li>Guarde los medicamentos en un lugar fresco y seco, lejos de la luz solar directa.</li>
+                            <li>Mantenga los medicamentos fuera del alcance de los niños.</li>
+                            <li>No interrumpa el tratamiento sin consultar previamente con su médico.</li>
+                            <li>Tome los medicamentos según las instrucciones de su médico o farmacéutico, respetando las dosis y horarios indicados.</li>
+                            <li>Consulte con su médico o farmacéutico cualquier duda sobre sus medicamentos.</li>
+                            <li>Informe a su médico sobre cualquier efecto secundario que experimente.</li>
+                            <li>Revise regularmente la fecha de caducidad de sus medicamentos.</li>
+                            <li>No comparta sus medicamentos con otras personas.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="report-footer">
+                        Este informe es únicamente informativo y no sustituye el asesoramiento médico o farmacéutico profesional.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo (simulando una base de datos)
+        let medicamentos = [
+            { 
+                id: 1, 
+                nombre: 'Paracetamol', 
+                principioActivo: 'Paracetamol',
+                grupo: 'Otros', 
+                actividadFarmacologica: 'Analgésico y antipirético', 
+                formaAdministracion: 'Vía oral. Se puede tomar con o sin alimentos.', 
+                formaConservacion: 'Conservar a temperatura ambiente (inferior a 30ºC), en lugar seco y protegido de la luz.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'No superar la dosis máxima diaria de 4g. El consumo excesivo de alcohol puede aumentar el riesgo de daño hepático.' 
+            },
+            { 
+                id: 2, 
+                nombre: 'Ibuprofeno', 
+                principioActivo: 'Ibuprofeno',
+                grupo: 'Otros', 
+                actividadFarmacologica: 'Antiinflamatorio no esteroideo (AINE)', 
+                formaAdministracion: 'Vía oral. Tomar preferentemente con alimentos para reducir molestias gastrointestinales.', 
+                formaConservacion: 'Conservar a temperatura ambiente (inferior a 30ºC), en lugar seco y protegido de la luz.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Puede aumentar el riesgo de problemas cardiovasculares y gastrointestinales. No usar en último trimestre de embarazo.' 
+            },
+            { 
+                id: 3, 
+                nombre: 'Advagraf', 
+                principioActivo: 'Tacrolimus',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de la calcineurina', 
+                formaAdministracion: 'Vía oral. Tomar con el estómago vacío, al menos 1 hora antes o 2-3 horas después de las comidas.', 
+                formaConservacion: 'Las cápsulas se deben conservar a temperatura ambiente. Las formas líquidas, en nevera (2-8ºC).', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Advagraf se administra una vez al día. Las distintas marcas comerciales de tacrolimus (Prograf, Advagraf, Adoport, Conferoport, Envarsus..) no son intercambiables, consulte a su médico o farmacéutico si tiene dudas. Requiere monitorización regular de niveles en sangre. No consumir pomelo o zumo de pomelo durante el tratamiento.' 
+            },
+            { 
+                id: 4, 
+                nombre: 'Amoxicilina', 
+                principioActivo: 'Amoxicilina',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antibiótico betalactámico', 
+                formaAdministracion: 'Vía oral. Se puede tomar con o sin alimentos, aunque se recomienda con alimentos para reducir molestias gastrointestinales.',
+                formaConservacion: 'Suspensión oral: conservar en nevera una vez reconstituida (máximo 7 días). Comprimidos: a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Completar el tratamiento completo aunque los síntomas mejoren. Puede reducir la eficacia de anticonceptivos orales.' 
+            },
+            { 
+                id: 5, 
+                nombre: 'Sandimmun Neoral', 
+                principioActivo: 'Ciclosporina',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de la calcineurina', 
+                formaAdministracion: 'Vía oral. Tomar a la misma hora todos los días. Puede tomarse con o sin alimentos, pero siempre de la misma manera.', 
+                formaConservacion: 'Solución oral: conservar a temperatura ambiente (15-30ºC), no refrigerar. Cápsulas: temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Requiere monitorización regular de niveles en sangre y función renal. Evitar exposición excesiva al sol. No consumir pomelo.' 
+            },
+            { 
+                id: 6, 
+                nombre: 'Prograf', 
+                principioActivo: 'Tacrolimus',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de la calcineurina', 
+                formaAdministracion: 'Vía oral. Tomar con el estómago vacío, al menos 1 hora antes o 2-3 horas después de las comidas.', 
+                formaConservacion: 'Las cápsulas se deben conservar a temperatura ambiente. Las formas líquidas, en nevera (2-8ºC).', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Prograf se administra dos veces al día. Las distintas marcas comerciales de tacrolimus (Prograf, Advagraf, Adoport, Conferoport, Envarsus..) no son intercambiables, consulte a su médico o farmacéutico si tiene dudas. Requiere monitorización regular de niveles en sangre. No consumir pomelo o zumo de pomelo durante el tratamiento.' 
+            },
+            { 
+                id: 7, 
+                nombre: 'Septrin Forte', 
+                principioActivo: 'Cotrimoxazol (trimetoprim/sulfametoxazol)',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antibacteriano', 
+                formaAdministracion: 'Vía oral. Tomar con o sin alimentos.', 
+                formaConservacion: 'Temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Tome Septrin Forte según la pauta prescrita, generalmente tres veces por semana. Beba abundante agua. Este medicamento se dispensa en oficina de farmacia.' 
+            },
+            { 
+                id: 8, 
+                nombre: 'Valcyte', 
+                principioActivo: 'Valganciclovir',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antiviral', 
+                formaAdministracion: 'Vía oral. Tomar con alimentos para aumentar la biodisponibilidad.', 
+                formaConservacion: 'Conservar a temperatura ambiente (inferior a 30ºC), proteger de la humedad.', 
+                lugarDispensacion: 'Farmacia Hospitalaria', 
+                informacionImportante: 'Puede causar supresión de la médula ósea. Requiere ajuste de dosis en insuficiencia renal. Potencial efecto teratogénico.' 
+            },
+            { 
+                id: 9, 
+                nombre: 'CellCept', 
+                principioActivo: 'Micofenolato de mofetilo',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de la síntesis de purinas', 
+                formaAdministracion: 'Vía oral. Tomar con el estómago vacío para mejor absorción.', 
+                formaConservacion: 'Conservar a temperatura ambiente, protegido de la luz y humedad.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Evitar la exposición al sol y usar protección solar. Puede causar diarrea.' 
+            },
+            { 
+                id: 10, 
+                nombre: 'Myfortic', 
+                principioActivo: 'Micofenolato sódico',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de la síntesis de purinas', 
+                formaAdministracion: 'Vía oral. Tomar con el estómago vacío para mejor absorción.', 
+                formaConservacion: 'Conservar a temperatura ambiente, protegido de la luz y humedad.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Evitar la exposición al sol y usar protección solar. Puede causar diarrea.' 
+            },
+            { 
+                id: 11, 
+                nombre: 'Certican', 
+                principioActivo: 'Everolimus',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de mTOR', 
+                formaAdministracion: 'Vía oral. Tomar siempre a la misma hora, con o sin alimentos.', 
+                formaConservacion: 'Conservar a temperatura ambiente, protegido de la humedad.', 
+                lugarDispensacion: 'Farmacia Hospitalaria', 
+                informacionImportante: 'Requiere monitorización de niveles plasmáticos. Puede aumentar el riesgo de infecciones.' 
+            },
+            { 
+                id: 12, 
+                nombre: 'Rapamune', 
+                principioActivo: 'Sirolimus',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de mTOR', 
+                formaAdministracion: 'Vía oral. Tomar siempre a la misma hora, con o sin alimentos.', 
+                formaConservacion: 'Conservar a temperatura ambiente, protegido de la luz.', 
+                lugarDispensacion: 'Farmacia Hospitalaria', 
+                informacionImportante: 'Requiere monitorización de niveles plasmáticos. Puede retrasar la cicatrización.' 
+            },
+            { 
+                id: 12, 
+                nombre: 'Rapamune', 
+                principioActivo: 'Sirolimus',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Inmunosupresor inhibidor de mTOR', 
+                formaAdministracion: 'Vía oral. Tomar siempre a la misma hora, con o sin alimentos.', 
+                formaConservacion: 'Conservar a temperatura ambiente, protegido de la luz.', 
+                lugarDispensacion: 'Farmacia Hospitalaria', 
+                informacionImportante: 'Requiere monitorización de niveles plasmáticos. Puede retrasar la cicatrización.' 
+            },
+            { 
+                id: 13, 
+                nombre: 'Deflazacort', 
+                principioActivo: 'Deflazacort',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Corticosteroide inmunosupresor y antiinflamatorio', 
+                formaAdministracion: 'Vía oral. Preferiblemente por la mañana para evitar insomnio.', 
+                formaConservacion: 'Conservar a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Puede aumentar el riesgo de osteoporosis y diabetes.' 
+            },
+            { 
+                id: 14, 
+                nombre: 'Prednisona', 
+                principioActivo: 'Prednisona',
+                grupo: 'Inmunosupresores', 
+                actividadFarmacologica: 'Corticosteroide inmunosupresor y antiinflamatorio', 
+                formaAdministracion: 'Vía oral. Preferiblemente por la mañana para evitar insomnio.', 
+                formaConservacion: 'Conservar a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Puede aumentar el riesgo de osteoporosis y diabetes.' 
+            },
+            { 
+                id: 15, 
+                nombre: 'Fluconazol', 
+                principioActivo: 'Fluconazol',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antifúngico triazólico', 
+                formaAdministracion: 'Vía oral o intravenosa. Puede tomarse con o sin alimentos.', 
+                formaConservacion: 'Conservar a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Puede interaccionar con múltiples fármacos, incluyendo inmunosupresores.' 
+            },
+            { 
+                id: 16, 
+                nombre: 'Mycostatin susp.', 
+                principioActivo: 'Nistatina',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antifúngico poliénico', 
+                formaAdministracion: 'Vía oral. La suspensión puede administrarse sola, con ayuda de agua o mezclándola con un líquido o alimento blando que no sea ácido, como leche, miel, jalea, etc. En caso de candidiasis oral, mantener la suspensión en la boca el mayor tiempo posible (varios minutos) antes de ingerirla.', 
+                formaConservacion: 'Conservar a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Usar después de las comidas. No ingerir alimentos ni bebidas inmediatamente después.' 
+            },
+            { 
+                id: 17, 
+                nombre: 'Cariax enjuagues', 
+                principioActivo: 'Clorhexidina',
+                grupo: 'Antiinfecciosos', 
+                actividadFarmacologica: 'Antiséptico bucal de amplio espectro', 
+                formaAdministracion: 'Enjuague bucal. Mantener en la boca 30 segundos y escupir.', 
+                formaConservacion: 'Conservar a temperatura ambiente.', 
+                lugarDispensacion: 'Farmacia Comunitaria', 
+                informacionImportante: 'Puede causar tinción dental con el uso prolongado. No ingerir.' 
+            }            
+        ];
+        
+        // Medicamentos seleccionados por el paciente
+        let medicamentosSeleccionados = []; // Inicialmente ningún medicamento seleccionado
+        
+        // Función para inicializar la aplicación
+        function inicializarApp() {
+            // Establecer la pestaña listado como activa por defecto
+            document.querySelector('.tab[data-tab="listado"]').classList.add('active');
+            document.getElementById('listado').classList.add('active');
+            
+            // Añadir event listeners a las pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remover clase active de todas las pestañas y contenidos
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.main-card').forEach(c => c.classList.remove('active'));
+                    
+                    // Añadir clase active a la pestaña seleccionada y su contenido
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).classList.add('active');
+                    
+                    // Si se selecciona la pestaña de información para pacientes, actualizar la información
+                    if (this.dataset.tab === 'informacion') {
+                        actualizarInformacionPaciente();
+                    }
+                    
+                    // Si se selecciona la pestaña de informe, actualizar el informe
+                    if (this.dataset.tab === 'informe') {
+                        actualizarInforme();
+                    }
+                });
+            });
+            
+            // Establecer la fecha actual en el informe
+            const fechaHoy = new Date();
+            const opcionesFecha = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('fechaInforme').textContent = fechaHoy.toLocaleDateString('es-ES', opcionesFecha);
+            
+            // Inicializar la tabla de medicamentos
+            actualizarTablaMedicamentos();
+        }
+        
+        // Función para obtener la clase CSS según el grupo
+        function getGrupoClass(grupo) {
+            switch(grupo.toLowerCase()) {
+                case 'inmunosupresores':
+                    return 'group-inmunosupresor';
+                case 'antiinfecciosos':
+                    return 'group-antiinfeccioso';
+                default:
+                    return 'group-otro';
+            }
+        }
+        
+// Función para actualizar la tabla de medicamentos
+function actualizarTablaMedicamentos() {
+    const tbody = document.querySelector('#tablaMedicamentos tbody');
+    
+    // Limpiar tabla
+    tbody.innerHTML = '';
+    
+    if (medicamentos.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td colspan="3" class="empty-state">
+                No hay medicamentos disponibles.
+            </td>
+        `;
+        tbody.appendChild(tr);
+        return;
+    }
+    
+    // Agrupar los medicamentos por grupo
+    const gruposMedicamentos = {};
+    
+    medicamentos.forEach(med => {
+        if (!gruposMedicamentos[med.grupo]) {
+            gruposMedicamentos[med.grupo] = [];
+        }
+        gruposMedicamentos[med.grupo].push(med);
+    });
+    
+    // Definir el orden de los grupos
+    const ordenGrupos = ['Inmunosupresores', 'Antiinfecciosos', 'Otros'];
+    
+    // Para guardar todos los medicamentos ordenados
+    const medicamentosOrdenados = [];
+    
+    // Iterar sobre los grupos en el orden definido
+    ordenGrupos.forEach(grupo => {
+        if (gruposMedicamentos[grupo] && gruposMedicamentos[grupo].length > 0) {
+            // Ordenar alfabéticamente los medicamentos dentro del grupo
+            const medicamentosGrupo = gruposMedicamentos[grupo].sort((a, b) => 
+                a.nombre.localeCompare(b.nombre)
+            );
+            
+            // Añadir una fila de encabezado para el grupo
+            const trHeader = document.createElement('tr');
+            trHeader.style.backgroundColor = '#f0f0f0';
+            trHeader.innerHTML = `
+                <td colspan="4" style="font-weight: bold; color: #333; padding: 10px 15px;">
+                    ${grupo}
+                </td>
+            `;
+            tbody.appendChild(trHeader);
+            
+            // Agregar cada medicamento del grupo
+            medicamentosGrupo.forEach(med => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = med.id;
+                
+                // Verificar si este medicamento está seleccionado por el paciente
+                const seleccionado = medicamentosSeleccionados.includes(med.id);
+                
+                tr.innerHTML = `
+                    <td style="text-align: center">
+                        <input type="checkbox" class="medication-checkbox" ${seleccionado ? 'checked' : ''} 
+                               onchange="toggleMedicamentoSeleccionado(${med.id}, this.checked)">
+                    </td>
+                    <td>${med.nombre}</td>
+                    <td>${med.principioActivo}</td>
+                    <td>${med.actividadFarmacologica}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+    });
+}        
+// Función para alternar medicamentos seleccionados
+function toggleMedicamentoSeleccionado(id, checked) {
+    if (checked) {
+        if (!medicamentosSeleccionados.includes(id)) {
+            medicamentosSeleccionados.push(id);
+        }
+    } else {
+        medicamentosSeleccionados = medicamentosSeleccionados.filter(medId => medId !== id);
+    }
+    
+    // Actualizar la información para pacientes si estamos en esa pestaña
+    if (document.querySelector('.tab[data-tab="informacion"]').classList.contains('active')) {
+        actualizarInformacionPaciente();
+    }
+    
+    // Actualizar el informe si estamos en esa pestaña
+    if (document.querySelector('.tab[data-tab="informe"]').classList.contains('active')) {
+        actualizarInforme();
+    }
+}
+
+// Función para actualizar la información para pacientes
+function actualizarInformacionPaciente() {
+    const container = document.getElementById('informacionPaciente');
+    
+    // Limpiar contenedor
+    container.innerHTML = '';
+    
+    // Obtener los medicamentos seleccionados
+    const medsSeleccionados = medicamentos.filter(med => medicamentosSeleccionados.includes(med.id));
+    
+    if (medsSeleccionados.length === 0) {
+        container.innerHTML = `
+            <div class="no-meds-selected">
+                <p>No hay medicamentos seleccionados para este paciente.</p>
+                <p>Por favor, seleccione medicamentos en el apartado "Listado de medicamentos".</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Agrupar los medicamentos por grupo
+    const gruposMedicamentos = {};
+    
+    medsSeleccionados.forEach(med => {
+        if (!gruposMedicamentos[med.grupo]) {
+            gruposMedicamentos[med.grupo] = [];
+        }
+        gruposMedicamentos[med.grupo].push(med);
+    });
+    
+    // Definir el orden de los grupos
+    const ordenGrupos = ['Inmunosupresores', 'Antiinfecciosos', 'Otros'];
+    
+    // Iterar sobre los grupos en el orden definido
+    ordenGrupos.forEach(grupo => {
+        if (gruposMedicamentos[grupo] && gruposMedicamentos[grupo].length > 0) {
+            // Ordenar alfabéticamente los medicamentos dentro del grupo
+            const medicamentosGrupo = gruposMedicamentos[grupo].sort((a, b) => 
+                a.nombre.localeCompare(b.nombre)
+            );
+            
+            // Crear un encabezado para el grupo
+            const grupoHeader = document.createElement('h3');
+            grupoHeader.textContent = grupo;
+            grupoHeader.style.margin = '20px 0 15px 0';
+            grupoHeader.style.padding = '10px';
+            grupoHeader.style.backgroundColor = '#f0f0f0';
+            grupoHeader.style.borderRadius = '5px';
+            grupoHeader.style.color = '#333';
+            
+            container.appendChild(grupoHeader);
+            
+            // Agregar cada medicamento del grupo
+            medicamentosGrupo.forEach(med => {
+                const medSection = document.createElement('div');
+                medSection.className = 'med-info-section';
+                
+                medSection.innerHTML = `
+                    <span class="med-name">${med.nombre}</span>
+                    <span class="med-group ${getGrupoClass(med.grupo)}">${med.grupo}</span>
+                    
+                    <div class="med-details">
+                        <div class="med-detail-item">
+                            <span class="med-detail-label">Principio activo:</span>
+                            <div class="med-detail-content">${med.principioActivo}</div>
+                        </div>
+            
+                        <div class="med-detail-item">
+                            <span class="med-detail-label">Actividad farmacológica:</span>
+                            <div class="med-detail-content">${med.actividadFarmacologica}</div>
+                        </div>
+                        
+                        <div class="med-detail-item">
+                            <span class="med-detail-label">Lugar de dispensación:</span>
+                            <div class="med-detail-content">${med.lugarDispensacion}</div>
+                        </div>
+                        
+                        <div class="med-detail-item">
+                            <span class="med-detail-label">Forma de administración:</span>
+                            <div class="med-detail-content">${med.formaAdministracion}</div>
+                        </div>
+                        
+                        <div class="med-detail-item">
+                            <span class="med-detail-label">Forma de conservación:</span>
+                            <div class="med-detail-content">${med.formaConservacion}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="med-important-info">
+                        <strong>Información importante:</strong> ${med.informacionImportante}
+                    </div>
+                `;
+                
+                container.appendChild(medSection);
+            });
+        }
+    });
+}
+// Función para actualizar el informe
+function actualizarInforme() {
+    const container = document.getElementById('reporteMedicamentos');
+    
+    // Limpiar contenedor
+    container.innerHTML = '';
+    
+    // Obtener los medicamentos seleccionados
+    const medsSeleccionados = medicamentos.filter(med => medicamentosSeleccionados.includes(med.id));
+    
+    if (medsSeleccionados.length === 0) {
+        container.innerHTML = `
+            <p>No hay medicamentos seleccionados para este informe.</p>
+            <p>Por favor, seleccione medicamentos en el apartado "Listado de medicamentos".</p>
+        `;
+        return;
+    }
+    
+    // Agrupar los medicamentos por grupo
+    const gruposMedicamentos = {};
+    
+    medsSeleccionados.forEach(med => {
+        if (!gruposMedicamentos[med.grupo]) {
+            gruposMedicamentos[med.grupo] = [];
+        }
+        gruposMedicamentos[med.grupo].push(med);
+    });
+    
+    // Definir el orden de los grupos
+    const ordenGrupos = ['Inmunosupresores', 'Antiinfecciosos', 'Otros'];
+    
+    // Iterar sobre los grupos en el orden definido
+    ordenGrupos.forEach(grupo => {
+        if (gruposMedicamentos[grupo] && gruposMedicamentos[grupo].length > 0) {
+            // Ordenar alfabéticamente los medicamentos dentro del grupo
+            const medicamentosGrupo = gruposMedicamentos[grupo].sort((a, b) => 
+                a.nombre.localeCompare(b.nombre)
+            );
+            
+            // Crear un encabezado para el grupo
+            const grupoHeader = document.createElement('h4');
+            grupoHeader.textContent = grupo;
+            grupoHeader.style.marginTop = '20px';
+            grupoHeader.style.marginBottom = '10px';
+            grupoHeader.style.color = '#0056b3';
+            grupoHeader.style.borderBottom = '1px solid #dee2e6';
+            grupoHeader.style.paddingBottom = '5px';
+            
+            container.appendChild(grupoHeader);
+            
+            // Agregar cada medicamento del grupo
+            medicamentosGrupo.forEach(med => {
+                const medItem = document.createElement('div');
+                medItem.className = 'report-med-item';
+                
+                medItem.innerHTML = `
+                    <div class="report-med-name">${med.nombre}</div>
+                    <div class="report-med-group">${med.grupo} - ${med.actividadFarmacologica}</div>
+                    
+                    <div class="report-med-detail">
+                        <span class="report-med-label">Principio activo:</span>
+                        ${med.principioActivo}
+                    </div>
+                           
+                    <div class="report-med-detail">
+                        <span class="report-med-label">Forma de administración:</span>
+                        ${med.formaAdministracion}
+                    </div>
+                    
+                    <div class="report-med-detail">
+                        <span class="report-med-label">Forma de conservación:</span>
+                        ${med.formaConservacion}
+                    </div>
+                    
+                    <div class="report-med-detail">
+                        <span class="report-med-label">Lugar de dispensación:</span>
+                        ${med.lugarDispensacion}
+                    </div>
+                    
+                    <div class="report-important-info">
+                        <strong>Información importante:</strong> ${med.informacionImportante}
+                    </div>
+                `;
+                
+                container.appendChild(medItem);
+            });
+        }
+    });
+}
+// Función para exportar los medicamentos a Excel
+function exportarMedicamentos() {
+    // Crear datos en formato adecuado para Excel
+    const datosExcel = medicamentos.map(med => ({
+        'ID': med.id,
+        'Nombre': med.nombre,
+        'Principio Activo': med.principioActivo,
+        'Grupo': med.grupo,
+        'Actividad Farmacológica': med.actividadFarmacologica,
+        'Forma de Administración': med.formaAdministracion,
+        'Forma de Conservación': med.formaConservacion,
+        'Lugar de Dispensación': med.lugarDispensacion,
+        'Información Importante': med.informacionImportante
+    }));
+    
+    // Crear libro y hoja de trabajo
+    const libro = XLSX.utils.book_new();
+    const hoja = XLSX.utils.json_to_sheet(datosExcel);
+    
+    // Ajustar ancho de columnas
+    const columnas = [
+        { wch: 5 },     // ID
+        { wch: 25 },    // Nombre
+        { wch: 20 },    // Grupo
+        { wch: 30 },    // Actividad Farmacológica
+        { wch: 40 },    // Forma de Administración
+        { wch: 40 },    // Forma de Conservación
+        { wch: 20 },    // Lugar de Dispensación
+        { wch: 50 }     // Información Importante
+    ];
+    hoja['!cols'] = columnas;
+    
+    // Añadir hoja al libro
+    XLSX.utils.book_append_sheet(libro, hoja, 'Medicamentos');
+    
+    // Generar archivo y descargarlo
+    XLSX.writeFile(libro, 'medicamentos.xlsx');
+}
+
+// Función para exportar el informe a PDF
+function exportarPDF() {
+    // Opciones para la exportación a PDF
+    const options = {
+        margin: [10, 10, 10, 10],
+        filename: 'informe_medicamentos.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait'
+        },
+        // Configuración específica para evitar divisiones
+        pagebreak: { 
+            avoid: '.report-med-item'
+        }
+    };
+    
+    // Obtener el elemento que contiene el informe
+    const element = document.getElementById('reportePDF');
+    
+    // Generar y descargar el PDF
+    html2pdf().set(options).from(element).save();
+}
+
+// Inicializar la aplicación al cargar la página
+document.addEventListener('DOMContentLoaded', inicializarApp);
+</script>
+</body>
+</html>
